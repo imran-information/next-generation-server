@@ -2,13 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+// const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000;
 
-app.use(cors())
-app.use(express.json())
+const corsApi = {
+    origin: ['http://localhost:5173'],
+    credentials: true
+}
 
+app.use(cors(corsApi))
+app.use(express.json())
+// app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.eedxn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -35,8 +41,25 @@ async function run() {
             const user = req.body;
             // console.log(user.userEmail);
             const token = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '1d' })
-            console.log(token);
-            res.send({ success: true })
+            // console.log(token);
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                })
+                .send({ success: true })
+        })
+
+        // jwt token clear 
+        app.get('/signOut', async (req, res) => {
+            res
+                .clearCookie('token', {
+                    maxAge: 0,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                })
+                .send({ success: true })
         })
 
 
