@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000;
@@ -27,6 +28,18 @@ async function run() {
         const blogsCollections = db.collection('blogs')
         const wishlistCollections = db.collection('wishlists')
         const commentsCollections = db.collection('comments')
+
+
+        // JWT 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            // console.log(user.userEmail);
+            const token = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '1d' })
+            console.log(token);
+            res.send({ success: true })
+        })
+
+
 
         // add blog in blogsCollections 
         app.post('/add-blog', async (req, res) => {
