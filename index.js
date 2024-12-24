@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-// const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000;
@@ -14,7 +14,7 @@ const corsApi = {
 
 app.use(cors(corsApi))
 app.use(express.json())
-// app.use(cookieParser())
+app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.eedxn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -26,6 +26,24 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
+// verify token 
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access..' })
+        }
+        req.user = decoded;
+    })
+    next()
+}
+
 
 async function run() {
     try {
@@ -112,8 +130,13 @@ async function run() {
         })
 
         // get specific user wishlist in wishlistCollections 
-        app.get('/wishlists/:email', async (req, res) => {
+        app.get('/wishlists/:email', verifyToken, async (req, res) => {
+            const decodedEmail = req.user?.email
+            console.log(decodedEmail);
             const email = req.params.email;
+            if (decodedEmail !== email) {
+                return res.status(401).send({ message: 'unauthorized access.. you are a not valid user.!' })
+            }
             const filter = { email: email }
             const result = await wishlistCollections.find(filter).toArray();
             res.send(result)
