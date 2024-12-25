@@ -39,6 +39,8 @@ const verifyToken = (req, res, next) => {
         if (err) {
             return res.status(401).send({ message: 'unauthorized access..' })
         }
+        // console.log(decoded);
+
         req.user = decoded;
     })
     next()
@@ -54,7 +56,7 @@ async function run() {
         const commentsCollections = db.collection('comments')
 
 
-        // JWT 
+        // JWT create
         app.post('/jwt', async (req, res) => {
             const user = req.body;
             // console.log(user.userEmail);
@@ -131,9 +133,9 @@ async function run() {
 
         // get specific user wishlist in wishlistCollections 
         app.get('/wishlists/:email', verifyToken, async (req, res) => {
-            const decodedEmail = req.user?.email
-            console.log(decodedEmail);
+            const decodedEmail = req.user?.userEmail
             const email = req.params.email;
+            // console.log(decodedEmail);
             if (decodedEmail !== email) {
                 return res.status(401).send({ message: 'unauthorized access.. you are a not valid user.!' })
             }
