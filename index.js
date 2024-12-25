@@ -40,9 +40,9 @@ const verifyToken = (req, res, next) => {
             return res.status(401).send({ message: 'unauthorized access..' })
         }
         // console.log(decoded);
-
         req.user = decoded;
     })
+
     next()
 }
 
@@ -85,7 +85,7 @@ async function run() {
 
 
         // add blog in blogsCollections 
-        app.post('/add-blog', async (req, res) => {
+        app.post('/add-blog', verifyToken, async (req, res) => {
             const newBlog = req.body;
             const result = await blogsCollections.insertOne(newBlog);
             // console.log(result);
@@ -93,13 +93,13 @@ async function run() {
         })
 
         // 6 blogs data load 
-        app.get('/blogs', async (req, res) => {
+        app.get('/blogs', verifyToken, async (req, res) => {
             const result = await blogsCollections.find().limit(6).toArray();
             res.send(result)
         })
 
         // all blogs data load 
-        app.get('/all-blogs', async (req, res) => {
+        app.get('/all-blogs', verifyToken, async (req, res) => {
             const filter = req.query.category;
             console.log(filter);
             const search = req?.query?.search;
@@ -145,7 +145,7 @@ async function run() {
         })
 
         // delete wishlist in wishlistCollections
-        app.delete('/delete-wishlist/:id', async (req, res) => {
+        app.delete('/delete-wishlist/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await wishlistCollections.deleteOne(query)
@@ -153,7 +153,7 @@ async function run() {
         })
 
         // get the one blog in blogsCollections 
-        app.get('/blog/:id', async (req, res) => {
+        app.get('/blog/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await blogsCollections.findOne(query)
@@ -162,7 +162,7 @@ async function run() {
         })
 
         // update the blog in blogsCollections 
-        app.patch('/update-blog/:id', async (req, res) => {
+        app.patch('/update-blog/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const updatedBlog = req.body;
             const updatedDoc = {
@@ -176,7 +176,7 @@ async function run() {
 
 
         // add comments to the commentsCollections DB
-        app.post('/add-comment', async (req, res) => {
+        app.post('/add-comment', verifyToken, async (req, res) => {
             const newComment = req.body;
             const result = await commentsCollections.insertOne(newComment);
             res.send(result)
@@ -184,7 +184,7 @@ async function run() {
         })
 
         // get all the comments to the commentsCollections DB
-        app.get('/comments/:id', async (req, res) => {
+        app.get('/comments/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const filter = { blog_id: id }
             const result = await commentsCollections.find(filter).toArray()
@@ -193,7 +193,7 @@ async function run() {
         })
 
 
-        app.get("/top-posts", async (req, res) => {
+        app.get("/top-posts", verifyToken, async (req, res) => {
             try {
                 const result = await blogsCollections
                     .aggregate([
