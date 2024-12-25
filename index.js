@@ -92,13 +92,13 @@ async function run() {
         })
 
         // 6 blogs data load 
-        app.get('/blogs', verifyToken, async (req, res) => {
+        app.get('/blogs', async (req, res) => {
             const result = await blogsCollections.find().limit(6).toArray();
             res.send(result)
         })
 
         // all blogs data load 
-        app.get('/all-blogs', verifyToken, async (req, res) => {
+        app.get('/all-blogs', async (req, res) => {
             const filter = req.query.category;
             // console.log(filter);
             const search = req?.query?.search;
@@ -192,7 +192,7 @@ async function run() {
         })
 
 
-        app.get("/top-posts", verifyToken, async (req, res) => {
+        app.get("/top-posts", async (req, res) => {
             try {
                 const result = await blogsCollections
                     .aggregate([
