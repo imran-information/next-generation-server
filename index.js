@@ -42,7 +42,6 @@ const verifyToken = (req, res, next) => {
         // console.log(decoded);
         req.user = decoded;
     })
-
     next()
 }
 
@@ -101,7 +100,7 @@ async function run() {
         // all blogs data load 
         app.get('/all-blogs', verifyToken, async (req, res) => {
             const filter = req.query.category;
-            console.log(filter);
+            // console.log(filter);
             const search = req?.query?.search;
             // const query = {
             //     $title: {
@@ -180,7 +179,7 @@ async function run() {
             const newComment = req.body;
             const result = await commentsCollections.insertOne(newComment);
             res.send(result)
-            console.log(result);
+            // console.log(result);
         })
 
         // get all the comments to the commentsCollections DB
@@ -189,7 +188,7 @@ async function run() {
             const filter = { blog_id: id }
             const result = await commentsCollections.find(filter).toArray()
             res.send(result)
-            console.log(result);
+            // console.log(result);
         })
 
 
