@@ -8,7 +8,7 @@ const app = express()
 const port = process.env.PORT || 5000;
 
 const corsApi = {
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://next-gen-230be.web.app', 'https://next-gen-230be.firebaseapp.com'],
     credentials: true
 }
 
