@@ -193,40 +193,43 @@ async function run() {
 
 
         app.get("/top-posts", async (req, res) => {
-            try {
-                const result = await blogsCollections
-                    .aggregate([
-                        {
-                            $addFields: {
-                                wordCount: { $size: { $split: ["$longDescription", " "] } },
-                            },
-                        },
-                        { $sort: { wordCount: -1 } },
-                        { $limit: 10 },
-                        {
-                            $project: {
-                                title: 1,
-                                author: 1,
-                                wordCount: 1,
-                                date: 1,
-                                category: 1,
-                            },
-                        },
-                    ])
-                    .toArray();
 
-                res.send(result);
+            // try {
+            //     const result = await blogsCollections
+            //         .aggregate([
+            //             {
+            //                 $addFields: {
+            //                     wordCount: { $size: { $split: ["$longDescription", " "] } },
+            //                 },
+            //             },
+            //             { $sort: { wordCount: -1 } },
+            //             { $limit: 10 },
+            //             {
+            //                 $project: {
+            //                     title: 1,
+            //                     author: 1,
+            //                     wordCount: 1,
+            //                     date: -1,
+            //                     category: 1,
+            //                 },
+            //             },
+            //         ])
+            //         .toArray();
+
+            //     res.send(result);
 
 
 
-            } catch (error) {
-                console.error("Error fetching top posts:", error);
-                res.status(500).send({ error: "An error occurred while fetching top posts" });
-            }
+            // } catch (error) {
+            //     console.error("Error getting top posts:", error);
+            //     res.status(500).send({ error: "An error occurred while getting top posts" });
+            // }
 
-            // const options = { longDescription: -1 }
-            // const result = await blogsCollections.find().sort({ longDescription: -1 }).toArray()
-            // res.send(result)
+
+            const result = await blogsCollections.find().toArray();
+            const sortData = result.sort((a, b) => b.longDescription.length - a.longDescription.length);
+            res.send(sortData);
+            // console.log(sortData);
         });
 
 
