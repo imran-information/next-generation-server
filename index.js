@@ -7,6 +7,10 @@ require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000;
 
+// const corsApi = {
+//     origin: ['http://localhost:5173'],
+//     credentials: true
+// }
 const corsApi = {
     origin: ['http://localhost:5173', 'https://next-gen-230be.web.app', 'https://next-gen-230be.firebaseapp.com'],
     credentials: true
@@ -91,33 +95,59 @@ async function run() {
             res.send(result)
         })
 
-        // 6 blogs data load 
+        // 8 blogs data load 
         app.get('/blogs', async (req, res) => {
-            const result = await blogsCollections.find().limit(6).toArray();
+            const result = await blogsCollections.find().limit(8).toArray();
             res.send(result)
         })
 
         // all blogs data load 
         app.get('/all-blogs', async (req, res) => {
-            const filter = req.query.category;
-            // console.log(filter);
-            const search = req?.query?.search;
-            // const query = {
-            //     $title: {
-            //         $search: search,
-            //     }
-            // }
+            const { category, search, page = 1, limit = 10, sort } = req.query;
 
+            // Build the query object
             let query = {
-                title: {
-                    $regex: search,
-                    $options: 'i'
-                }
+                title: { $regex: search, $options: 'i' }
+            };
+
+            // Apply category filter if provided
+            if (category) {
+                query.category = category;
             }
-            if (filter) query.category = filter;
-            const result = await blogsCollections.find(query).toArray();
-            res.send(result)
-        })
+
+            const sortOrder = sort === 'desc' ? -1 : 1;  // Descending or Ascending based on user selection
+
+            try {
+                // Fetch the blogs with pagination and sorting by createdAt
+                const result = await blogsCollections
+                    .find(query)
+                    .sort({ date: sortOrder }) // Sorting by the creation time
+                    .skip((page - 1) * limit) // Skipping results for pagination
+                    .limit(Number(limit)) // Limiting results
+                    .toArray();
+
+                res.status(200).send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Error fetching blogs');
+            }
+        });
+
+
+
+
+        // Featured Blogs  8 blogs data load
+        app.get('/featured-blogs', async (req, res) => {
+            try {
+                const result = await blogsCollections.find().limit(8).sort({ date: -1 }).toArray();
+                console.log(result);
+                res.send(result);
+            } catch (error) {
+                console.error("Error fetching blogs:", error);
+                res.status(500).send("Server Error");
+            }
+        });
+
 
         // add wishlist in wishlistCollections 
         app.post('/add-wishlist', async (req, res) => {
@@ -191,51 +221,36 @@ async function run() {
             // console.log(result);
         })
 
-
         app.get("/top-posts", async (req, res) => {
+            try {
+                const page = parseInt(req.query.page) || 1;
+                const pageSize = parseInt(req.query.pageSize) || 5;
 
-            // try {
-            //     const result = await blogsCollections
-            //         .aggregate([
-            //             {
-            //                 $addFields: {
-            //                     wordCount: { $size: { $split: ["$longDescription", " "] } },
-            //                 },
-            //             },
-            //             { $sort: { wordCount: -1 } },
-            //             { $limit: 10 },
-            //             {
-            //                 $project: {
-            //                     title: 1,
-            //                     author: 1,
-            //                     wordCount: 1,
-            //                     date: -1,
-            //                     category: 1,
-            //                 },
-            //             },
-            //         ])
-            //         .toArray();
+                console.log("Page:", page, "PageSize:", pageSize);
 
-            //     res.send(result);
+                const skip = (page - 1) * pageSize;
+                const totalPosts = await blogsCollections.countDocuments();
 
+                console.log("Total Posts in DB:", totalPosts);
 
+                const result = await blogsCollections.find().skip(skip).limit(pageSize).toArray();
 
-            // } catch (error) {
-            //     console.error("Error getting top posts:", error);
-            //     res.status(500).send({ error: "An error occurred while getting top posts" });
-            // }
+                console.log("Fetched Posts:", result);
 
-
-            const result = await blogsCollections.find().toArray();
-            const sortData = result.sort((a, b) => b.longDescription.length - a.longDescription.length);
-            res.send(sortData);
-            // console.log(sortData);
+                res.send({
+                    data: result,
+                    totalPosts,
+                });
+            } catch (error) {
+                console.error("Error getting top posts:", error);
+                res.status(500).send({ error: "An error occurred while getting top posts" });
+            }
         });
 
 
-
         // console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } finally {
+    }
+    finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
     }
